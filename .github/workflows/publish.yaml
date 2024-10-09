@@ -1,0 +1,49 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bun:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build
+        run: bun run ./build.ts bun
+
+      - name: Publish
+        working-directory: ./dist
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bun publish --tag bun --config=../bunfig.toml
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build
+        run: bun run ./build.ts npm
+
+      - name: Setup npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm config set @lkwr:registry=https://npm.pkg.github.com
+          npm config set //npm.pkg.github.com/:_authToken=${{ secrets.NPM_TOKEN }}
+
+      - name: Publish
+        working-directory: ./dist
+        run: npm publish --tag npm
